@@ -11,7 +11,7 @@ RF24Network network(radio);         // Network uses that radio
 
 //fix needed (depends on your design)
 const uint16_t this_node = 01;      // Address of our node in Octal format
-byte rMode = 0;                     //if 1 it is mean router mode, another is end device mode(reccomend 0)
+byte rMode = 1;                     //if 1 it is mean router mode, another is end device mode(reccomend 0)
 byte sInterval = 0;                 //sInterval = [0 1 2 3] = [1 sec 1 min 10 min 15 min]
 
 //unneeded
@@ -19,32 +19,32 @@ const uint16_t master_node = 00;
 bool timer = true; 
 unsigned long tInterval; 
 unsigned long tStart; 
-int count; 
- 
+int count;  
 struct payload_t {                  
   float Energy;
   float Voltage;
   float Current;
   float temp;
   float humid;
-}
+};
  
 void setup(void)
 {
   dht.setup(6); // data pin 6
   delay(1000);
-  pinMode(7, OUTPUT);   //set digital pin 7 as output to control status LED
+  pinMode(7, OUTPUT); //set digital pin 7 as output to control status LED
   setSleepInterval(sInterval); 
   SPI.begin();
   radio.begin();
   radio.setPALevel(RF24_PA_HIGH);                             //Set this for PA level
   network.begin(/*channel*/ 85, /*node address*/ this_node);  //Set channel for communicate channel
   Serial.begin(115200);
-  digitalWrite(7,HIGH); //turn on status LED
+  digitalWrite(7,HIGH); //turn on the light
 }
- 
+
 void loop() {
-    network.update();                         
+    network.update();    
+    if(timer) {                     
     Serial.print("Sending...");
     payload_t payload = {get_energy() , get_voltage() , get_current() , get_temperature() , get_humidity()};
     RF24NetworkHeader header(/*to node*/ master_node);
@@ -58,6 +58,7 @@ void loop() {
     else {
       Serial.println("failed.");
       PIND |= (1<<PIND7); //this toggles the status LED at pin seven to show transmit failed
+      }
     }
   if(!rMode) { //if we are in end device mode get ready to go to sleep
     timer = true; //wer are not using the timer so make sure variable is set to true
